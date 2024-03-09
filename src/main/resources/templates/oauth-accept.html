@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org">
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+<div id="app">
+    <v-app>
+        <v-container fluid>
+            <v-layout align-start fill-height>
+                <v-content>
+                    <v-form>
+                        <v-layout>
+                            <v-flex md4 offset-md4>
+                                <v-card>
+                                    <v-card-title primary-title>
+                                        <div>
+                                            <h1>OAuth Approval</h1>
+                                        </div>
+                                        <p>Do you authorize {{ clientId }} with scope {{ getScope }} to access your protected resources?</p>
+                                        <v-form method="post" action="/oauth/authorize" id="confirmationForm"
+                                                name="confirmationForm">
+                                            <v-text-field type="hidden"
+                                                          name="user_oauth_approval"
+                                                          v-model="user_oauth_approval"></v-text-field>
+                                            <v-text-field type="hidden" v-for="scope in scopes"
+                                                          :name="getParamName(scope)"
+                                                          v-model="acceptAllScope"></v-text-field>
+                                        </v-form>
+                                    </v-card-title>
+                                    <v-card-actions>
+                                        <v-spacer></v-spacer>
+                                        <v-btn color="primary" @click="approve()">Approve</v-btn>
+                                        <v-btn color="error" @click="deny()">Deny</v-btn>
+                                        <v-spacer></v-spacer>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-flex>
+                        </v-layout>
+                    </v-form>
+                </v-content>
+            </v-layout>
+        </v-container>
+    </v-app>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+<script th:inline="javascript">
+    new Vue({
+        el: '#app',
+        data: {
+            clientId: [[${authorizationRequest.clientId}]],
+            scopes: [[${authorizationRequest.scope}]],
+            user_oauth_approval: true,
+            acceptAllScope: true
+        },
+        methods: {
+            approve() {
+                this.acceptAllScope = true;
+                this.$nextTick(() => {
+                    confirmationForm.submit();
+                });
+            },
+
+            deny() {
+                this.acceptAllScope = false;
+                this.$nextTick(() => {
+                    confirmationForm.submit();
+                });
+            },
+
+            getParamName(name) {
+                return "scope." + name;
+            }
+        },
+        computed: {
+            getScope() {
+                return this.scopes.join(", ");
+            }
+        }
+    })
+</script>
+</body>
+</html>
